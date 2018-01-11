@@ -18,17 +18,31 @@ public class DocumentParser implements Runnable {
 	}
 	
 	public void run() {
-		BufferedReader br = new BufferedReader(new InputStringReader(new FileInputString(file)));
-		String line = null;
-		while((line = br.readLine())! = null) {
-			String uLine = line.toUpperCase();
-			String[] words = uLine.split(" "); // Can also take a regexpression
-			addWordsToBuffer(words);
-			Shingle s = getNextShingle();
-			queue.put(s); // Blocking method. Add is not a blocking method
+		BufferedReader br;
+		try {
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+		
+			String line = null;
+			while((line = br.readLine()) != null) {
+				String uLine = line.toUpperCase();
+				String[] words = uLine.split(" "); // Can also take a regexpression
+				addWordsToBuffer(words);
+				Shingle s = getNextShingle();
+				queue.put(s); // Blocking method. Add is not a blocking method
+			}
+			flushBuffer();
+			br.close();
+		
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		flushBuffer();
-		br.close():
 	}// Run
 
 
@@ -48,8 +62,8 @@ public class DocumentParser implements Runnable {
 				counter++;
 			}
 		}  
-		if (sb.length > 0) {
-			return(new Shingle(docId, sb.toString().hashCode());
+		if (sb.length() > 0) {
+			return(new Shingle(docId, sb.toString().hashCode()));
 		}
 		else {
 			return(null);
@@ -59,12 +73,22 @@ public class DocumentParser implements Runnable {
 
 	private void flushBuffer() {
 		while(buffer.size() > 0) {
-			Sh(Single s = getNextShingle();
+			Shingle s = getNextShingle();
 			if(s != null) {
-				queue.put(s);
+				try {
+					queue.put(s);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			else {
-				queue.put(new Poison(docId, 0));
+				try {
+					queue.put(new Poison(docId, 0));
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}
