@@ -1,5 +1,11 @@
 package ie.gmit.sw;
 
+/**
+ * Array of strings populated by the file parser.
+ * @author Hugh Brady
+ *
+ */
+
 public class Shingle {
 	private int docID;
 	private int hashCode;
@@ -21,6 +27,5 @@ public class Shingle {
 	public void setHashCode(int hashCode) {
 		this.hashCode = hashCode;
 	}
-	
 	
 }

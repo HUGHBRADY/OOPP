@@ -1,0 +1,1 @@
+typeSearchIndex = [{"p":"ie.gmit.sw","l":"Shingle"}]

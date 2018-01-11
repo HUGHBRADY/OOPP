@@ -3,14 +3,16 @@ package ie.gmit.sw;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-
+/**
+ * A runnable implementation that parses the files
+ * @author Hugh Brady
+ */
 public class DocumentParser implements Runnable {
 
 	private BlockingQueue<Shingle> queue;
 	private String file;
-	private int shingleSize, k;
+	private int shingleSize, k, docId;
 	private Deque<String> buffer = new LinkedList<>();
-	private int docId;	
 	
 	public DocumentParser(String file, BlockingQueue<Shingle> queue, int shingleSize, int k) {
 		this.file = file;
@@ -21,43 +23,41 @@ public class DocumentParser implements Runnable {
 
 
 	public void run() {
-		System.out.println("start run");
-		BufferedReader br;
+		System.out.println("Beginning parsing file...");
 		try {
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-		
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 			String line = null;
+			
 			while((line = br.readLine()) != null) {
 				if (line.length() > 0){
 					String uLine = line.toUpperCase();
-					System.out.println(uLine);
+					uLine.replaceAll("[^a-zA-Z]", "");
 					String[] words = uLine.split("\\s+"); 
 					
 					addWordsToBuffer(words);
 				}
-				
 			}
+			
 			while(buffer.size() != 0){
 				Shingle s = getNextShingle();
 				if(s != null){					
 					queue.put(s); // Blocking method. Add is not a blocking method
 				}
 			}
+			System.out.println("... Finished parsing");
+			
 			flushBuffer();
-			br.close();		
+			br.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();			
+			e.printStackTrace();
+			System.out.println("Error! File " + file + "not found");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("End run");
-	}// Run
-
+		
+	}// run
 
 	private void addWordsToBuffer(String [] words) {
 		for(String s : words) {
@@ -73,15 +73,17 @@ public class DocumentParser implements Runnable {
 				sb.append(buffer.poll());
 				counter++;
 			}
-		}  
+			else {
+				counter = shingleSize;
+			}
+		}
 		if (sb.length() > 0) {
 			return(new Shingle(docId, sb.toString().hashCode()));
 		}
 		else {
 			return(null);
 		}
-  	} // Next shingle
-	
+  	} // Next shingle	
 
 	private void flushBuffer() {
 		while(buffer.size() > 0) {
@@ -94,14 +96,12 @@ public class DocumentParser implements Runnable {
 					e.printStackTrace();
 				}
 			}
-			else {
-				try {
-					queue.put(new Poison(docId, 0));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			try {
+				queue.put(new Poison(0, 0));
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
-	
 }
