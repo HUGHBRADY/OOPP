@@ -26,6 +26,19 @@ public class Consumer {
 		}
 	}
 	
+	public synchronized int hasher(Shingle s) {
+		int minValue = Integer.MAX_VALUE;
+		for (Integer hash : minHashes) {
+
+			// XOR the Shingle hashcode with the generated minhash methods
+			int minHashed = s.getShingleHashCode() ^ hash;
+			if (minHashed < minValue) {
+				minValue = minHashed;
+			}
+		}
+		return minValue;
+	}
+	
 	public void run() {
 		
 		List<Integer> list1 = new ArrayList<>();
@@ -42,7 +55,6 @@ public class Consumer {
 					pool.execute(new Runnable(){
 						@Override
 						public void run() {
-
 							if (s.getDocID() == 1) {
 								list1.add(hasher(s));
 							} else if (s.getDocID() == 2) {
@@ -54,9 +66,8 @@ public class Consumer {
 					});
 				}
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} // blocking method. Won't behave properly if you use pull()			
+			} // blocking method. Won't behave properly if you use pull()
 		}
 	}
 }

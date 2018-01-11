@@ -11,31 +11,43 @@ public class DocumentParser implements Runnable {
 	private int shingleSize, k;
 	private Deque<String> buffer = new LinkedList<>();
 	private int docId;	
-
-	public DocumentParser(String file, BlockingQueue<Shingle> q, int shingleSize, int k) {
-		this.queue = q;
-		
-	}
 	
+	public DocumentParser(String file, BlockingQueue<Shingle> queue, int shingleSize, int k) {
+		this.file = file;
+		this.queue = queue;
+		this.shingleSize = shingleSize;
+		this.k = k;
+	}
+
+
 	public void run() {
+		System.out.println("start run");
 		BufferedReader br;
 		try {
 			br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 		
 			String line = null;
 			while((line = br.readLine()) != null) {
-				String uLine = line.toUpperCase();
-				String[] words = uLine.split(" "); // Can also take a regexpression
-				addWordsToBuffer(words);
+				if (line.length() > 0){
+					String uLine = line.toUpperCase();
+					System.out.println(uLine);
+					String[] words = uLine.split("\\s+"); 
+					
+					addWordsToBuffer(words);
+				}
+				
+			}
+			while(buffer.size() != 0){
 				Shingle s = getNextShingle();
-				queue.put(s); // Blocking method. Add is not a blocking method
+				if(s != null){					
+					queue.put(s); // Blocking method. Add is not a blocking method
+				}
 			}
 			flushBuffer();
-			br.close();
-		
+			br.close();		
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e.printStackTrace();			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -43,6 +55,7 @@ public class DocumentParser implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		System.out.println("End run");
 	}// Run
 
 
@@ -50,8 +63,7 @@ public class DocumentParser implements Runnable {
 		for(String s : words) {
 			buffer.add(s);
 		}
-  
-        }
+	}
 
   	private Shingle getNextShingle() {
 		StringBuffer sb = new StringBuffer();
@@ -86,7 +98,6 @@ public class DocumentParser implements Runnable {
 				try {
 					queue.put(new Poison(docId, 0));
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

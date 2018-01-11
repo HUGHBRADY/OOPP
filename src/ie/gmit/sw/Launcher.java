@@ -20,6 +20,5 @@ public class Launcher {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 }
